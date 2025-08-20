@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نموذج أسئلة السفارة الأمريكية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --accent: #fdbb2d;
+            --light: #f5f7fa;
+            --dark: #333;
+            --gray: #666;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" opacity="0.1"><circle cx="50" cy="50" r="40" stroke="white" stroke-width="10" fill="none" /></svg>');
+            background-size: cover;
+            opacity: 0.1;
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        .form-container {
+            padding: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-left: 10px;
+            font-size: 1.6rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn i {
+            margin-left: 8px;
+        }
+        
+        .question {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+            transition: transform 0.3s;
+        }
+        
+        .question:hover {
+            transform: translateX(5px);
+        }
+        
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .question-text-en {
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>نموذج أسئلة السفارة الأمريكية</h1>
+            <p>American Embassy Questions Form</p>
+        </header>
+        
+        <div class="form-container">
+            <form id="embassyForm">
+                <div class="section-title">
+                    <i class="fas fa-user"></i>
+                    المعلومات الشخصية | Personal Information
+                </div>
+                
+                <div class="form-group">
+                    <label for="arabicName" class="required">الاسم بالعربية | Name in Arabic</label>
+                    <input type="text" id="arabicName" name="arabicName" required placeholder="أدخل اسمك بالكامل باللغة العربية">
+                </div>
+                
+                <div class="form-group">
+                    <label for="englishName" class="required">الاسم بالإنجليزية | Name in English</label>
+                    <input type="text" id="englishName" name="englishName" required placeholder="Enter your full name in English">
+                </div>
+                
+                <div class="section-title">
+                    <i class="fas fa-question-circle"></i>
+                    أسئلة السفارة | Embassy Questions
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">1. ما هو الغرض من زيارتك للولايات المتحدة؟</div>
+                    <div class="question-text-en">What is the purpose of your visit to the United States?</div>
+                    <textarea name="purpose" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">2. كم المدة التي تخطط للبقاء خلالها في الولايات المتحدة؟</div>
+                    <div class="question-text-en">How long do you plan to stay in the United States?</div>
+                    <textarea name="duration" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">3. ما هي علاقتك بالشخص أو المؤسسة التي ستزورها في الولايات المتحدة؟</div>
+                    <div class="question-text-en">What is your relationship to the person or institution you are visiting in the United States?</div>
+                    <textarea name="relationship" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">4. هل زرت الولايات المتحدة من قبل؟ إذا كانت الإجابة نعم، متى وما هو الغرض من الزيارة؟</div>
+                    <div class="question-text-en">Have you visited the United States before? If yes, when and what was the purpose of your visit?</div>
+                    <textarea name="previousVisit" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">5. ما هو عملك الحالي وماذا ستفعل بعد عودتك من الولايات المتحدة؟</div>
+                    <div class="question-text-en">What is your current job and what will you do after returning from the United States?</div>
+                    <textarea name="job" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">6. كيف ستمول رحلتك إلى الولايات المتحدة؟</div>
+                    <div class="question-text-en">How will you finance your trip to the United States?</div>
+                    <textarea name="finance" required placeholder="أدخل إجابتك هنا..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-paper-plane"></i>
+                    إرسال الإجابات إلى البريد الإلكتروني | Send Answers to Email
+                </button>
+            </form>
+        </div>
+        
+        <footer>
+            <p>© 2023 نموذج أسئلة السفارة الأمريكية | American Embassy Questions Form</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">
+        تم إعداد البريد الإلكتروني بنجاح، يرجى الضغط على إرسال في نافذة البريد
+    </div>
+
+    <script>
+        document.getElementById('embassyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // التحقق من صحة النموذج
+            const arabicName = document.getElementById('arabicName').value;
+            const englishName = document.getElementById('englishName').value;
+            
+            if (!arabicName || !englishName) {
+                alert('يرجى ملء جميع الحقول الإلزامية');
+                return;
+            }
+            
+            // جمع البيانات من النموذج
+            const formData = new FormData(this);
+            const data = {};
+            for (const [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // إنشاء محتوى البريد الإلكتروني
+            const emailContent = `
+                الاسم بالعربية: ${data.arabicName}
+                الاسم بالإنجليزية: ${data.englishName}
+                
+                1. ما هو الغرض من زيارتك للولايات المتحدة؟
+                ${data.purpose}
+                
+                2. كم المدة التي تخطط للبقاء خلالها في الولايات المتحدة؟
+                ${data.duration}
+                
+                3. ما هي علاقتك بالشخص أو المؤسسة التي ستزورها في الولايات المتحدة؟
+                ${data.relationship}
+                
+                4. هل زرت الولايات المتحدة من قبل؟ إذا كانت الإجابة نعم، متى وما هو الغرض من الزيارة؟
+                ${data.previousVisit}
+                
+                5. ما هو عملك الحالي وماذا ستفعل بعد عودتك من الولايات المتحدة؟
+                ${data.job}
+                
+                6. كيف ستمول رحلتك إلى الولايات المتحدة؟
+                ${data.finance}
+            `;
+            
+            // ترميح محتوى البريد للإرسال
+            const encodedContent = encodeURIComponent(emailContent);
+            
+            // فتح عميل البريد الإلكتروني الافتراضي
+            window.location.href = `mailto:wzaqan@gmail.com?subject=إجابات أسئلة السفارة الأمريكية - ${data.arabicName}&body=${encodedContent}`;
+            
+            // إظهار الإشعار
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            
+            // إخفاء الإشعار بعد 5 ثوان
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

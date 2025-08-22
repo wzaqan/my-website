@@ -850,3 +850,153 @@ function showFieldError(field, message) {
 }
 
 console.log('تم تحميل ملف JavaScript لصفحة إدخال الموظف / Employee entry page JavaScript loaded');
+
+(function() {
+  const FORM_ID = 'visa-form';
+  const STORAGE_KEY = 'visaFormDataV1';
+  const form = document.getElementById(FORM_ID);
+  const toast = document.getElementById('toast');
+  const saveBtn = document.getElementById('saveBtn');
+  const printBtn = document.getElementById('printBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function showToast(message, type = 'success') {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.className = '';
+    toast.classList.add(type);
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2000);
+  }
+
+  function getFormData() {
+    const data = {};
+    Array.from(form.elements).forEach(el => {
+      if (!el.name) return;
+      if (el.type === 'checkbox') {
+        data[el.name] = !!el.checked;
+      } else if (el.type !== 'button' && el.type !== 'submit' && el.type !== 'reset') {
+        data[el.name] = el.value;
+      }
+    });
+    return data;
+  }
+
+  function setFormData(data) {
+    if (!data) return;
+    Array.from(form.elements).forEach(el => {
+      if (!el.name) return;
+      if (el.type === 'checkbox') {
+        el.checked = !!data[el.name];
+      } else if (el.type !== 'button' && el.type !== 'submit' && el.type !== 'reset') {
+        if (typeof data[el.name] !== 'undefined') el.value = data[el.name];
+      }
+    });
+  }
+
+  function saveToStorage(show = false) {
+    try {
+      const payload = JSON.stringify(getFormData());
+      localStorage.setItem(STORAGE_KEY, payload);
+      if (show) showToast('تم الحفظ بنجاح');
+    } catch (e) {
+      showToast('تعذر الحفظ محليًا', 'error');
+    }
+  }
+
+  function restoreFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setFormData(JSON.parse(raw));
+    } catch (e) {
+      /* noop */
+    }
+  }
+
+  function clearStorage() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function debounce(fn, wait) {
+    let t;
+    return function(...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  function validateForm() {
+    const firstInvalid = Array.from(form.elements).find(el => el.required && !(
+      el.type === 'checkbox' ? el.checked : String(el.value || '').trim()
+    ));
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstInvalid.classList.add('invalid');
+      setTimeout(() => firstInvalid.classList.remove('invalid'), 800);
+      return false;
+    }
+    return true;
+  }
+
+  function addRipple(el) {
+    el.addEventListener('click', function(e) {
+      const rect = el.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      ripple.className = 'ripple';
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      el.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+
+  function setupReveals() {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  }
+
+  function bindEvents() {
+    const saveDebounced = debounce(() => saveToStorage(false), 500);
+    form.addEventListener('input', saveDebounced);
+    form.addEventListener('change', saveDebounced);
+
+    saveBtn.addEventListener('click', () => {
+      if (!validateForm()) {
+        showToast('يرجى إكمال الحقول المطلوبة', 'error');
+        return;
+      }
+      saveToStorage(true);
+    });
+
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearStorage();
+      showToast('تمت إعادة التعيين');
+    });
+
+    document.querySelectorAll('.btn').forEach(addRipple);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    restoreFromStorage();
+    setupReveals();
+    bindEvents();
+  });
+})();

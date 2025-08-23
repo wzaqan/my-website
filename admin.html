@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الإدارية - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>لوحة التحكم الإدارية</h1>
+            <h2>Admin Dashboard</h2>
+        </header>
+
+        <main>
+            <!-- إدارة الكليات / College Management -->
+            <section class="college-management">
+                <h3>إدارة الكليات / College Management</h3>
+                
+                <div class="add-college-form">
+                    <h4>إضافة كلية جديدة / Add New College</h4>
+                    <form id="addCollegeForm">
+                        <div class="form-row">
+                            <input type="text" id="collegeNameAr" placeholder="اسم الكلية بالعربية" required>
+                            <input type="text" id="collegeNameEn" placeholder="College Name in English" required>
+                            <button type="submit">إضافة / Add</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="colleges-list">
+                    <h4>قائمة الكليات / Colleges List</h4>
+                    <div id="collegesList" class="colleges-container">
+                        <!-- سيتم ملء الكليات هنا بواسطة JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- مراجعة الطلبات / Review Applications -->
+            <section class="applications-review">
+                <h3>مراجعة طلبات الموظفين / Review Employee Applications</h3>
+                
+                <div class="filter-section">
+                    <label for="collegeFilter">تصفية حسب الكلية / Filter by College:</label>
+                    <select id="collegeFilter">
+                        <option value="">جميع الكليات / All Colleges</option>
+                    </select>
+                    
+                    <button id="deleteAllApplicationsBtn" class="delete-all-btn">🗑️ حذف جميع الطلبات / Delete All Applications</button>
+                    
+                    <label for="statusFilter">تصفية حسب الحالة / Filter by Status:</label>
+                    <select id="statusFilter">
+                        <option value="">جميع الحالات / All Status</option>
+                        <option value="pending">بانتظار المراجعة / Pending Review</option>
+                        <option value="approved">مقبول / Approved</option>
+                        <option value="rejected">مرفوض / Rejected</option>
+                    </select>
+                    
+                    <button id="deleteAllApplicationsBtn" class="delete-all-btn">🗑️ حذف جميع الطلبات / Delete All Applications</button>
+                </div>
+
+                <div id="applicationsList" class="applications-container">
+                    <!-- سيتم ملء الطلبات هنا بواسطة JavaScript -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p><a href="index.html">العودة لصفحة الإدخال / Back to Entry Page</a></p>
+        </footer>
+    </div>
+
+    <!-- نافذة مراجعة الطلب / Application Review Modal -->
+    <div id="reviewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>مراجعة طلب الموظف / Review Employee Application</h3>
+            
+            <div id="applicationDetails" class="application-details">
+                <!-- سيتم ملء تفاصيل الطلب هنا -->
+            </div>
+            
+            <div class="review-actions">
+                <button id="approveBtn" class="approve-btn">✅ قبول / Approve</button>
+                <button id="rejectBtn" class="reject-btn">❌ رفض / Reject</button>
+            </div>
+            
+            <div id="rejectSection" class="reject-section" style="display: none;">
+                <label for="rejectNotes">ملاحظات الرفض / Rejection Notes:</label>
+                <textarea id="rejectNotes" placeholder="أدخل سبب الرفض... / Enter rejection reason..."></textarea>
+                <button id="confirmRejectBtn" class="confirm-reject-btn">تأكيد الرفض / Confirm Rejection</button>
+                <button id="cancelRejectBtn" class="cancel-btn">إلغاء / Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

@@ -234,9 +234,7 @@ class Database {
         }
         
         // التحقق من طريقة التحقق / Verification method validation
-        if (data.verification_method === 'photo' && !data.photo_path) {
-            errors.push('يجب رفع صورة عند اختيار طريقة التحقق بالصورة / Photo is required when selecting photo verification');
-        }
+        // تم إزالة التحقق البرمجي للصورة وجعلها مجرد تعليمات إرشادية
         
         if (data.verification_method === 'password' && (!data.password || data.password.trim() === '')) {
             errors.push('يجب إدخال الرقم السري / Password is required');

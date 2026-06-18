@@ -1524,7 +1524,7 @@ class OMREngine:
     # ═══════════════════════════════════════════════
     # تقييم فقاعة واحدة
     # ═══════════════════════════════════════════════
-    def _validate_and_score_bubble(self, thresh, gray_img, cx, cy, half_r):
+    def _validate_and_score_bubble(self, thresh, gray_img, cx, cy, half_r, fill_threshold=0.25):
         """
         يُقيّم فقاعة واحدة ويُعيد درجة darkness (0-100) أو None إذا كانت فارغة هندسياً.
         يجمع بين فلترة نسبة الامتلاء (من الصورة الثنائية) وشدة التظليل (من الصورة الرمادية).
@@ -1541,7 +1541,7 @@ class OMREngine:
         roi_th = thresh[y1:y2, x1:x2]
         white_pixels = cv2.countNonZero(roi_th)
         fill_ratio = white_pixels / roi_th.size if roi_th.size > 0 else 0
-        if fill_ratio < 0.25:   # أقل من 25% امتلاء => تجاهل (تشويش/أثر)
+        if fill_ratio < fill_threshold:   # استخدم العتبة الديناميكية الممررة
             return None
 
         # 3. المرحلة الإحصائية: حساب شدة التظليل (Intensity Score)
@@ -1561,7 +1561,7 @@ class OMREngine:
     # ═══════════════════════════════════════════════
     # قراءة الإجابات
     # ═══════════════════════════════════════════════
-    def _read_questions(self, thresh, questions, img_w, img_h,
+            def _read_questions(self, thresh, questions, img_w, img_h,
                         cal_w, cal_h, map_y, map_x,
                         bubble_size_rel, offsets_rel, num_choices,
                         gray_image=None):
@@ -1579,43 +1579,59 @@ class OMREngine:
             q_dark_cache = []
 
             for q in sorted_qs:
+                choices = q.get("choices", [])
+                n_ch = len(choices)
+                if n_ch == 0:
+                    q_dark_cache.append([])
+                    continue
+
+                # ── المرحلة 1: حساب عتبة الامتلاء الديناميكية للسؤال ──
+                fill_ratios = []
+                for ch in choices:
+                    raw_x = ch["rx"] * img_w
+                    raw_y = ch["ry"] * img_h
+                    my = map_y(raw_y, raw_x)
+                    mx = map_x(raw_x, my)
+                    x1 = max(0, int(mx) - half_r)
+                    y1 = max(0, int(my) - half_r)
+                    x2 = min(img_w, int(mx) + half_r)
+                    y2 = min(img_h, int(my) + half_r)
+                    if x2 > x1 and y2 > y1:
+                        roi_th = thresh[y1:y2, x1:x2]
+                        white_pixels = cv2.countNonZero(roi_th)
+                        fill_ratios.append(white_pixels / roi_th.size if roi_th.size > 0 else 0)
+                    else:
+                        fill_ratios.append(0.0)
+
+                if len(fill_ratios) >= 3:
+                    sorted_fr = sorted(fill_ratios)
+                    trim = int(len(sorted_fr) * 0.2)
+                    trimmed = sorted_fr[trim:-trim] if trim > 0 else sorted_fr
+                    median_fill = np.median(trimmed) if trimmed else 0.0
+                else:
+                    median_fill = np.median(fill_ratios) if fill_ratios else 0.0
+
+                fill_threshold = max(0.18, median_fill * 0.35)
+
+                # ── المرحلة 2: تقييم الفقاعات بالعتبة الديناميكية ──
                 row = []
-                for ch in q.get("choices", []):
+                for ch in choices:
                     raw_x = ch["rx"] * img_w
                     raw_y = ch["ry"] * img_h
                     my = map_y(raw_y, raw_x)
                     mx = map_x(raw_x, my)
 
-                    # استخدم الدالة الجديدة لتقييم الفقاعة
-                    score = self._validate_and_score_bubble(thresh, gray_image, mx, my, half_r)
+                    score = self._validate_and_score_bubble(
+                        thresh, gray_image, mx, my, half_r,
+                        fill_threshold=fill_threshold
+                    )
                     if score is None:
-                        row.append(0.0)   # رُفضت هندسياً -> نعتبرها فارغة
+                        row.append(0.0)
                     else:
                         row.append(score)
                 q_dark_cache.append(row)
 
             # ── مرحلة 2: تحديد الإجابة لكل سؤال ────────────────────────
-            #
-            # كل سؤال يُقارن فقاعاته مع بعضها فقط — لا عتبة مطلقة.
-            # يعمل مع أي تضليل (خفيف/ثقيل) وأي لون ورقة وأي ماسح.
-            #
-            # شجرة القرار (z-score داخل كل سؤال):
-            #   z_best   = (best - mean) / stdev
-            #   z_second = (second - mean) / stdev
-            #   gap_abs  = best - second
-            #   gap_pct  = (best - second) / best
-            #
-            #   z_best < Z_BEST_MIN  أو  gap_abs < NOISE_THRESHOLD_ABS:
-            #       fill_min = max(mean*1.2, 8.0)
-            #       filled >= 2  → DUPLICATE:lbl1,lbl2
-            #       filled == 1  → label
-            #       else         → EMPTY
-            #   z_second < Z_SECOND_MAX:
-            #       fill_min = max(mean*1.2, 8.0)
-            #       filled >= 2  → DUPLICATE:lbl1,lbl2
-            #       else         → label واحد
-            #   gap_pct >= GAP_PCT_MIN  → DUPLICATE:lbl1,lbl2  (مكرر دائماً)
-            #   غير ذلك                 → DUPLICATE:lbl1,lbl2  (مزدوج متقارب)
             results = []
             for q, row in zip(sorted_qs, q_dark_cache):
                 choices = q.get("choices", [])
@@ -1639,13 +1655,11 @@ class OMREngine:
                 gap_abs  = best_val - sec_val
                 gap_pct  = (best_val - sec_val) / best_val if best_val > 0 else 0.0
 
-                # ── تهيئة مصدر الحقيقة ──
                 fill_min = -1.0
                 filled   = []
                 result   = "?"
 
                 if z_best < self.Z_BEST_MIN or gap_abs < self.NOISE_THRESHOLD_ABS:
-                    # إشارة ضعيفة — تحقق بعتبة مطلقة هل هناك فقاعات مظللة فعلاً
                     fill_min = max(best_val * 0.60, row_mean * 1.05, 8.0)
                     filled   = [i for i, v in enumerate(row) if v > fill_min]
                     if len(filled) >= 2:
@@ -1658,7 +1672,6 @@ class OMREngine:
                         result = "EMPTY"
                     results.append(result)
                 elif z_second < self.Z_SECOND_MAX:
-                    # إجابة واحدة واضحة — تحقق من وجود ثانية مظللة قبل القبول
                     fill_min = max(best_val * 0.60, row_mean * 1.05, 8.0)
                     filled   = [i for i, v in enumerate(row) if v > fill_min]
                     if len(filled) >= 2:
@@ -1669,14 +1682,12 @@ class OMREngine:
                         result = choices[best_i]["label"]
                     results.append(result)
                 elif gap_pct >= self.GAP_PCT_MIN:
-                    # مسح ناقص واضح — مكرر دائماً
                     sec_i  = sorted(range(n_ch), key=lambda x: row[x], reverse=True)[1]
                     lbl_1  = choices[best_i]["label"]
                     lbl_2  = choices[sec_i]["label"]
                     result = f"DUPLICATE:{lbl_1},{lbl_2}"
                     results.append(result)
                 else:
-                    # مزدوج متقارب — مكرر
                     sec_i  = sorted(range(n_ch), key=lambda x: row[x], reverse=True)[1]
                     lbl_1  = choices[best_i]["label"]
                     lbl_2  = choices[sec_i]["label"]
@@ -1737,7 +1748,7 @@ class OMREngine:
             return results
 
 
-    def _save_debug(self, thresh, template_json, actual_marks_xy,
+ def _save_debug(self, thresh, template_json, actual_marks_xy,
                     img_w, img_h, cal_w, cal_h, map_y, map_x):
         try:
             os.makedirs(os.path.join(BASE_DIR, "omr_debug"), exist_ok=True)
